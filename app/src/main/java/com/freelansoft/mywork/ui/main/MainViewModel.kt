@@ -6,7 +6,7 @@ import com.freelansoft.mywork.dto.Plant
 import com.freelansoft.mywork.service.PlantService
 
 class MainViewModel : ViewModel() {
-    var plants: MutableLiveData<ArrayList<Plant>> = MutableLiveData<ArrayList<Plant>>()
+    private var _plants: MutableLiveData<ArrayList<Plant>> = MutableLiveData<ArrayList<Plant>>()
     var plantService: PlantService = PlantService()
 
     init {
@@ -14,7 +14,10 @@ class MainViewModel : ViewModel() {
     }
 
     fun fetchPlants(plantName: String) {
-        plants = plantService.fetchPlants(plantName)
+        _plants = plantService.fetchPlants(plantName)
     }
-    // TODO: Implement the ViewModel
+
+    internal var plants: MutableLiveData<ArrayList<Plant>>
+        get() {return _plants}
+        set(value) {_plants = value}
 }
