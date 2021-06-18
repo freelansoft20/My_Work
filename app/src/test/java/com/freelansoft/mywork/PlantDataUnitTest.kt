@@ -1,8 +1,12 @@
 package com.freelansoft.mywork
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.lifecycle.MutableLiveData
 import com.freelansoft.mywork.dto.Plant
+import com.freelansoft.mywork.service.PlantService
 import com.freelansoft.mywork.ui.main.MainViewModel
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.Assert
 import org.junit.Test
 
@@ -20,6 +24,7 @@ class PlantDataUnitTest {
     @get:Rule
     var rule: TestRule =  InstantTaskExecutorRule()
     lateinit var mvm: MainViewModel
+    var plantService = mockk<PlantService>()
 
     @Test
     fun confirmEasternRedbud_outputsEasternRedbud () {
@@ -29,13 +34,32 @@ class PlantDataUnitTest {
 
     @Test
     fun searchForRedbud_returnsRedbud() {
-        givenAFeedOfPlantDataAreAvailable()
+        givenAFeedOfMockedPlantDataAreAvailable()
         whenSearchForRedbud()
         thenResultContainsEasternRedbud()
     }
 
-    private fun givenAFeedOfPlantDataAreAvailable() {
+    private fun givenAFeedOfMockedPlantDataAreAvailable() {
         mvm = MainViewModel()
+        createMockData()
+
+    }
+
+    private fun createMockData() {
+        var allPlantsLiveData = MutableLiveData<ArrayList<Plant>>()
+        var allPlants = ArrayList<Plant>()
+        // create and add plants to our collection.
+        var redbud = Plant("Cercis", "canadensis", "Eastern Redbud")
+        allPlants.add(redbud)
+        var redOak = Plant("Quercus", "rubra", "Red Oak")
+        allPlants.add(redOak)
+        var whiteOak = Plant("Quercus", "alba", "White Oak")
+        allPlants.add(whiteOak)
+        allPlantsLiveData.postValue(allPlants)
+        every {plantService.fetchPlants(or("Redbud", "Quercus"))} returns allPlantsLiveData
+        every {plantService.fetchPlants(not(or("Redbud", "Quercus")))} returns MutableLiveData<ArrayList<Plant>>()
+        mvm.plantService = plantService
+
     }
 
     private fun whenSearchForRedbud() {
@@ -59,7 +83,7 @@ class PlantDataUnitTest {
 
     @Test
     fun searchForGarbage_returnsNothing() {
-        givenAFeedOfPlantDataAreAvailable()
+        givenAFeedOfMockedPlantDataAreAvailable()
         whenISearchForGarbage()
         thenIGetZeroResults()
     }
