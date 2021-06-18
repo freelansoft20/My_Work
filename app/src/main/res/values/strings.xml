@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">My Work</string>
+    <string name="latitude">latitude</string>
+    <string name="longitude">longitude</string>
+    <string name="zeropointzero">zeropointzero</string>
+    <string name="plantName">plantName</string>
+    <string name="description">description</string>
+    <string name="datePlanted">datePlanted</string>
 </resources>
