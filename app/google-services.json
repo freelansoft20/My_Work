@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "807464872811",
+    "project_id": "my-work-39d15",
+    "storage_bucket": "my-work-39d15.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:807464872811:android:3169a555358abd25a6ba2e",
+        "android_client_info": {
+          "package_name": "com.freelansoft.mywork"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "807464872811-reis7rps312qfgn6b3ngft7s7thbs0eu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5-Eh7nyWek7Aju6Bpal7aQMEAf3YZ-HE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "807464872811-reis7rps312qfgn6b3ngft7s7thbs0eu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
