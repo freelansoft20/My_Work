@@ -45,12 +45,12 @@ class MainFragment : Fragment() {
     protected var photoURI : Uri? = null
 //    internal lateinit var viewModel: MainViewModel
 //    private lateinit var applicationViewModel: ApplicationViewModel
-//    private var _plantId = 0
+    private var _plantId = 0
 //    private var user : FirebaseUser? = null
 //    private var photos : ArrayList<Photo> = ArrayList<Photo>()
 //    private var specimen = Specimen()
 //    private var _events = ArrayList<Event>()
-//    var selectedPlant: Plant = Plant("", "", "")
+    var selectedPlant: Plant = Plant("", "", "")
 
     companion object {
         fun newInstance() = MainFragment()
@@ -74,6 +74,14 @@ class MainFragment : Fragment() {
             specimens -> spnSpecimens.setAdapter(ArrayAdapter(requireContext(), R.layout.support_simple_spinner_dropdown_item, specimens))
         })
 
+        /**
+         * An existing item was clicked from the predefined autocomplete list.
+         */
+        actPlantName.setOnItemClickListener { parent, view, position, id ->
+            selectedPlant = parent.getItemAtPosition(position) as Plant
+            _plantId = selectedPlant.plantId
+        }
+
         btnTakePhoto.setOnClickListener {
             prepTakePhoto()
         }
@@ -94,6 +102,7 @@ class MainFragment : Fragment() {
             plantName = actPlantName.text.toString()
             description = txtDescription.text.toString()
             datePlanted = btnDatePlanted.text.toString()
+            plantId = _plantId
         }
 
         viewModel.save(specimen)
