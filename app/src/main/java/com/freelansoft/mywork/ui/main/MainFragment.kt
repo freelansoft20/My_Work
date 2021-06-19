@@ -24,6 +24,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.Observer
 import com.freelansoft.mywork.R
 import com.freelansoft.mywork.dto.Plant
+import com.freelansoft.mywork.dto.Specimen
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.android.synthetic.main.main_fragment.*
@@ -76,6 +77,22 @@ class MainFragment : Fragment() {
         btnLogon.setOnClickListener {
             prepOpenImageGallery()
         }
+
+        btnSave.setOnClickListener {
+            saveSpecimen()
+        }
+    }
+
+    private fun saveSpecimen() {
+        var specimen = Specimen().apply {
+            latitude = lblLatitudeValue.text.toString()
+            longitude = lblLongitudeValue.text.toString()
+            plantName = actPlantName.text.toString()
+            description = txtDescription.text.toString()
+            datePlanted = btnDatePlanted.text.toString()
+        }
+
+        viewModel.save(specimen)
     }
 
     private fun prepOpenImageGallery() {
