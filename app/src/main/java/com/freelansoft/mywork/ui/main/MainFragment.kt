@@ -45,11 +45,10 @@ class MainFragment : Fragment() {
     private lateinit var currentPhotoPath: String
     protected val SAVE_IMAGE_REQUEST_CODE: Int = 1999
     protected var photoURI : Uri? = null
-//    internal lateinit var viewModel: MainViewModel
-//    private lateinit var applicationViewModel: ApplicationViewModel
-//    private var _plantId = 0
-//    private var user : FirebaseUser? = null
-//    private var photos : ArrayList<Photo> = ArrayList<Photo>()
+    private lateinit var applicationViewModel: LocationViewModel
+    private var _plantId = 0
+    private var user : FirebaseUser? = null
+    private var photos : ArrayList<Photo> = ArrayList<Photo>()
 //    private var specimen = Specimen()
 //    private var _events = ArrayList<Event>()
     var selectedPlant: Plant = Plant("", "", "")
