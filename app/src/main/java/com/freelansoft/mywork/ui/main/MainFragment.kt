@@ -24,13 +24,14 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.Observer
 import com.freelansoft.mywork.R
 import com.freelansoft.mywork.dto.Plant
+import com.google.common.reflect.ImmutableTypeToInstanceMap.of
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.android.synthetic.main.main_fragment.*
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.jar.Manifest
+
 
 class MainFragment : Fragment() {
 
@@ -43,7 +44,7 @@ class MainFragment : Fragment() {
     protected val SAVE_IMAGE_REQUEST_CODE: Int = 1999
     protected var photoURI : Uri? = null
 //    internal lateinit var viewModel: MainViewModel
-//    private lateinit var applicationViewModel: ApplicationViewModel
+    private lateinit var applicationViewModel: LocationViewModel
 //    private var _plantId = 0
 //    private var user : FirebaseUser? = null
 //    private var photos : ArrayList<Photo> = ArrayList<Photo>()
@@ -76,6 +77,24 @@ class MainFragment : Fragment() {
         btnLogon.setOnClickListener {
             prepOpenImageGallery()
         }
+        prepRequestLocationUpdates()
+    }
+
+    private fun prepRequestLocationUpdates() {
+        if (ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            requestLocationUpdates()
+        } else {
+            val permissionRequest = arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION)
+            requestPermissions(permissionRequest, LOCATION_PERMISSION_REQUEST_CODE)
+        }
+    }
+
+    private fun requestLocationUpdates() {
+        applicationViewModel = ViewModelProvider(this).get(LocationViewModel::class.java)
+        applicationViewModel.getLocationLiveData().observe(viewLifecycleOwner, Observer {
+            lblLatitudeValue.text = it.latitude
+            lblLongitudeValue.text = it.longitude
+        })
     }
 
     private fun prepOpenImageGallery() {

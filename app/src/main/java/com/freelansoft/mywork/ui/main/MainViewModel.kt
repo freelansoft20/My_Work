@@ -7,7 +7,7 @@ import com.freelansoft.mywork.service.PlantService
 
 class MainViewModel : ViewModel() {
     private var _plants: MutableLiveData<ArrayList<Plant>> = MutableLiveData<ArrayList<Plant>>()
-    var plantService: PlantService = PlantService()
+    var plantService: PlantService = PlantService(application)
 
     init {
         fetchPlants("e")

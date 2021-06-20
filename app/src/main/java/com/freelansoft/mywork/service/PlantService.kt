@@ -1,5 +1,6 @@
 package com.freelansoft.mywork.service
 
+import android.app.Application
 import androidx.lifecycle.MutableLiveData
 import com.freelansoft.mywork.RetrofitClientInstance
 import com.freelansoft.mywork.dao.IPlantDAO
@@ -8,7 +9,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class PlantService {
+class PlantService(application: Application) {
 
      fun fetchPlants(plantName: String): MutableLiveData<ArrayList<Plant>> {
         var _plants = MutableLiveData<ArrayList<Plant>>()
