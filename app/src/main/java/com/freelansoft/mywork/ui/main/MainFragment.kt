@@ -18,11 +18,12 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.Observer
+import com.firebase.ui.auth.AuthUI
 import com.freelansoft.mywork.R
+import com.freelansoft.mywork.dto.Photo
 import com.freelansoft.mywork.dto.Plant
 import com.freelansoft.mywork.dto.Specimen
 import com.google.firebase.auth.FirebaseAuth
@@ -31,7 +32,7 @@ import kotlinx.android.synthetic.main.main_fragment.*
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.jar.Manifest
+import kotlin.collections.ArrayList
 
 class MainFragment : Fragment() {
 
@@ -46,8 +47,8 @@ class MainFragment : Fragment() {
 //    internal lateinit var viewModel: MainViewModel
 //    private lateinit var applicationViewModel: ApplicationViewModel
     private var _plantId = 0
-//    private var user : FirebaseUser? = null
-//    private var photos : ArrayList<Photo> = ArrayList<Photo>()
+    private var user : FirebaseUser? = null
+    private var photos : ArrayList<Photo> = ArrayList<Photo>()
 //    private var specimen = Specimen()
 //    private var _events = ArrayList<Event>()
     var selectedPlant: Plant = Plant("", "", "")
@@ -87,7 +88,8 @@ class MainFragment : Fragment() {
         }
 
         btnLogon.setOnClickListener {
-            prepOpenImageGallery()
+            logon()
+//            prepOpenImageGallery()
         }
 
         btnSave.setOnClickListener {
@@ -95,7 +97,23 @@ class MainFragment : Fragment() {
         }
     }
 
+    private fun logon() {
+        var providers = arrayListOf(
+                AuthUI.IdpConfig.EmailBuilder().build()
+//                ,
+//                AuthUI.IdpConfig.GoogleBuilder().build()
+        )
+        startActivityForResult(
+                AuthUI.getInstance().createSignInIntentBuilder().setAvailableProviders(providers).build(), AUTH_REQUEST_CODE
+        )
+    }
+
     private fun saveSpecimen() {
+        if (user == null){
+            logon()
+        }
+        user ?: return
+
         var specimen = Specimen().apply {
             latitude = lblLatitudeValue.text.toString()
             longitude = lblLongitudeValue.text.toString()
@@ -105,7 +123,10 @@ class MainFragment : Fragment() {
             plantId = _plantId
         }
 
-        viewModel.save(specimen)
+        viewModel.save(specimen, photos, user!!)
+
+        specimen = Specimen()
+        photos  = ArrayList<Photo>()
     }
 
     private fun prepOpenImageGallery() {
@@ -150,6 +171,8 @@ class MainFragment : Fragment() {
             takePictureIntent -> takePictureIntent.resolveActivity(requireContext().packageManager)
             if (takePictureIntent == null) {
                 Toast.makeText(context, "Unable to save photo", Toast.LENGTH_LONG).show()
+                var photo = Photo(localUri = photoURI.toString())
+                photos.add(photo)
             } else {
                 // if we are here, we have a valid intent.
                 val photoFile: File = createImageFile()
@@ -172,8 +195,8 @@ class MainFragment : Fragment() {
                     val imageBitmap = data!!.extras!!.get("data") as Bitmap
                 } else if (requestCode == SAVE_IMAGE_REQUEST_CODE) {
                     Toast.makeText(context, "Image Saved", Toast.LENGTH_LONG).show()
-//                    var photo = Photo(localUri = photoURI.toString())
-//                    photos.add(photo)
+                    var photo = Photo(localUri = photoURI.toString())
+                    photos.add(photo)
                 } else if (requestCode == IMAGE_GALLERY_REQUEST_CODE) {
                     if (data != null && data.data != null) {
                         val image = data.data
@@ -181,6 +204,8 @@ class MainFragment : Fragment() {
                         val bitmap = ImageDecoder.decodeBitmap(source)
 
                     }
+                }else if (requestCode == AUTH_REQUEST_CODE) {
+                    user = FirebaseAuth.getInstance().currentUser
                 }
             }
         }
