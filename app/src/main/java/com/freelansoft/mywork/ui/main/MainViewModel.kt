@@ -24,6 +24,7 @@ class MainViewModel : ViewModel() {
 //    private var _events = MutableLiveData<List<Event>>()
 
 
+
     init {
         fetchPlants("e")
         firestore = FirebaseFirestore.getInstance()
