@@ -23,6 +23,7 @@ class MainViewModel : ViewModel() {
     private var _specimen = Specimen()
 //    private var _events = MutableLiveData<List<Event>>()
 
+    var plantService: PlantService = PlantService(application)
 
     init {
         fetchPlants("e")
