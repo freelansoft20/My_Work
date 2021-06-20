@@ -9,7 +9,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class PlantService(application: Application) {
+class PlantService {
 
      fun fetchPlants(plantName: String): MutableLiveData<ArrayList<Plant>> {
         var _plants = MutableLiveData<ArrayList<Plant>>()
