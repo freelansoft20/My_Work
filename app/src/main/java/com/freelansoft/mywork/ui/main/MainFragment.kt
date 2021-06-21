@@ -15,14 +15,19 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.firebase.ui.auth.AuthUI
 import com.freelansoft.mywork.R
+import com.freelansoft.mywork.dto.Event
+import com.freelansoft.mywork.dto.Photo
 import com.freelansoft.mywork.dto.Plant
 import com.freelansoft.mywork.dto.Specimen
 import com.google.firebase.auth.FirebaseAuth
@@ -31,26 +36,21 @@ import kotlinx.android.synthetic.main.main_fragment.*
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.jar.Manifest
+import kotlin.collections.ArrayList
 
-class MainFragment : Fragment() {
+class MainFragment : DiaryFragment() {
 
     private val CAMERA_REQUEST_CODE: Int = 1998
     private val IMAGE_GALLERY_REQUEST_CODE: Int = 2001
     private val LOCATION_PERMISSION_REQUEST_CODE = 2000
     private val AUTH_REQUEST_CODE = 2002
-    val CAMERA_PERMISSION_REQUEST_CODE = 1997
-    private lateinit var currentPhotoPath: String
-    protected val SAVE_IMAGE_REQUEST_CODE: Int = 1999
-    protected var photoURI : Uri? = null
-//    internal lateinit var viewModel: MainViewModel
+
 //    private lateinit var applicationViewModel: ApplicationViewModel
-//    private var _plantId = 0
-//    private var user : FirebaseUser? = null
-//    private var photos : ArrayList<Photo> = ArrayList<Photo>()
-//    private var specimen = Specimen()
-//    private var _events = ArrayList<Event>()
-//    var selectedPlant: Plant = Plant("", "", "")
+    private var _plantId = 0
+    private var user : FirebaseUser? = null
+    private var specimen = Specimen()
+    private var _events = ArrayList<Event>()
+    var selectedPlant: Plant = Plant("", "", "")
 
     companion object {
         fun newInstance() = MainFragment()
@@ -70,47 +70,138 @@ class MainFragment : Fragment() {
             plants -> actPlantName.setAdapter(ArrayAdapter(requireContext(), R.layout.support_simple_spinner_dropdown_item, plants))
         })
 
+        viewModel.specimens.observe(viewLifecycleOwner, Observer {
+            specimens -> spnSpecimens.setAdapter(ArrayAdapter(requireContext(), R.layout.support_simple_spinner_dropdown_item, specimens))
+        })
+
+
+        /**
+         * An existing item was clicked from the predefined autocomplete list.
+         */
+        actPlantName.setOnItemClickListener { parent, view, position, id ->
+            selectedPlant = parent.getItemAtPosition(position) as Plant
+            _plantId = selectedPlant.plantId
+        }
+
         btnTakePhoto.setOnClickListener {
             prepTakePhoto()
         }
 
         btnLogon.setOnClickListener {
-            prepOpenImageGallery()
+            logon()
+//            prepOpenImageGallery()
         }
 
         btnSave.setOnClickListener {
             saveSpecimen()
         }
+
+        spnSpecimens.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            /**
+             * Callback method to be invoked when the selection disappears from this
+             * view. The selection can disappear for instance when touch is activated
+             * or when the adapter becomes empty.
+             *
+             * @param parent The AdapterView that now contains no selected item.
+             */
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+            /**
+             *
+             * Callback method to be invoked when an item in this view has been
+             * selected. This callback is invoked only when the newly selected
+             * position is different from the previously selected position or if
+             * there was no selected item.
+             *
+             * Implementers can call getItemAtPosition(position) if they need to access the
+             * data associated with the selected item.
+             *
+             * @param parent The AdapterView where the selection happened
+             * @param view The view within the AdapterView that was clicked
+             * @param position The position of the view in the adapter
+             * @param id The row id of the item that is selected
+             */
+            override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+            ) {
+                specimen = parent?.getItemAtPosition(position) as Specimen
+                // use this specimen object to populate our UI fields
+                actPlantName.setText(specimen.plantName)
+                txtDescription.setText(specimen.description)
+                btnDatePlanted.setText(specimen.datePlanted)
+                viewModel.specimen = specimen
+                // trigger an update of the events for this specimen.
+                viewModel.fetchEvents()
+            }
+
+        }
+
+        rcyEventsForSpecimens.hasFixedSize()
+        rcyEventsForSpecimens.layoutManager = LinearLayoutManager(context)
+        rcyEventsForSpecimens.itemAnimator = DefaultItemAnimator()
+        rcyEventsForSpecimens.adapter = EventsAdapter(_events, R.layout.rowlayout)
+
+        viewModel.events.observe(viewLifecycleOwner, Observer {
+            events ->
+            // remove everthing that is in there.
+            _events.removeAll(_events)
+            // update with the new events that we have observed.
+            _events.addAll(events)
+            // tell the recycler view to update.
+            rcyEventsForSpecimens.adapter!!.notifyDataSetChanged()
+        })
     }
 
-    private fun saveSpecimen() {
-        var specimen = Specimen().apply {
+    private fun logon() {
+        var providers = arrayListOf(
+                AuthUI.IdpConfig.EmailBuilder().build()
+//                ,
+//                AuthUI.IdpConfig.GoogleBuilder().build()
+        )
+        startActivityForResult(
+                AuthUI.getInstance().createSignInIntentBuilder().setAvailableProviders(providers).build(), AUTH_REQUEST_CODE
+        )
+    }
+
+    internal fun saveSpecimen() {
+        if (user == null){
+            storeSpecimen()
+        }
+        user ?: return
+
+        storeSpecimen()
+
+        viewModel.save(specimen, photos, user!!)
+
+        specimen = Specimen()
+        photos  = ArrayList<Photo>()
+    }
+
+    /**
+     * Populate a specimen object based on the details entered into the user interface.
+     */
+    internal fun storeSpecimen() {
+        specimen.apply {
             latitude = lblLatitudeValue.text.toString()
             longitude = lblLongitudeValue.text.toString()
             plantName = actPlantName.text.toString()
             description = txtDescription.text.toString()
             datePlanted = btnDatePlanted.text.toString()
+            plantId = _plantId
         }
-
-        viewModel.save(specimen)
+        viewModel.specimen = specimen
     }
 
-    private fun prepOpenImageGallery() {
+        private fun prepOpenImageGallery() {
         Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI).apply {
             type = "image/*"
             startActivityForResult(this, IMAGE_GALLERY_REQUEST_CODE)
         }
-    }
-
-    private fun prepTakePhoto() {
-
-        if (ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            takePhoto()
-        }else{
-            val permissionRequest = arrayOf(android.Manifest.permission.CAMERA);
-            requestPermissions(permissionRequest, CAMERA_PERMISSION_REQUEST_CODE)
-        }
-
     }
 
     override fun onRequestPermissionsResult(
@@ -132,23 +223,6 @@ class MainFragment : Fragment() {
         }
     }
 
-    private fun takePhoto() {
-        Intent(MediaStore.ACTION_IMAGE_CAPTURE).also {
-            takePictureIntent -> takePictureIntent.resolveActivity(requireContext().packageManager)
-            if (takePictureIntent == null) {
-                Toast.makeText(context, "Unable to save photo", Toast.LENGTH_LONG).show()
-            } else {
-                // if we are here, we have a valid intent.
-                val photoFile: File = createImageFile()
-                photoFile?.also {
-                    photoURI = FileProvider.getUriForFile(requireActivity().applicationContext, "com.freelansoft.android.fileprovider", it)
-                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-                    startActivityForResult(takePictureIntent, SAVE_IMAGE_REQUEST_CODE)
-                }
-            }
-        }
-    }
-
     @RequiresApi(Build.VERSION_CODES.P)
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -159,8 +233,8 @@ class MainFragment : Fragment() {
                     val imageBitmap = data!!.extras!!.get("data") as Bitmap
                 } else if (requestCode == SAVE_IMAGE_REQUEST_CODE) {
                     Toast.makeText(context, "Image Saved", Toast.LENGTH_LONG).show()
-//                    var photo = Photo(localUri = photoURI.toString())
-//                    photos.add(photo)
+                    var photo = Photo(localUri = photoURI.toString())
+                    photos.add(photo)
                 } else if (requestCode == IMAGE_GALLERY_REQUEST_CODE) {
                     if (data != null && data.data != null) {
                         val image = data.data
@@ -168,21 +242,12 @@ class MainFragment : Fragment() {
                         val bitmap = ImageDecoder.decodeBitmap(source)
 
                     }
+                }else if (requestCode == AUTH_REQUEST_CODE) {
+                    user = FirebaseAuth.getInstance().currentUser
                 }
             }
         }
     }
-
-    private fun createImageFile() : File {
-        // genererate a unique filename with date.
-        val timestamp: String = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
-        // get access to the directory where we can write pictures.
-        val storageDir: File? = requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        return File.createTempFile("PlantDiary${timestamp}", ".jpg", storageDir).apply {
-            currentPhotoPath = absolutePath
-        }
-    }
-
 
 
 }
