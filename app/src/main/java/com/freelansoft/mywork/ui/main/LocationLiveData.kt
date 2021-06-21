@@ -1,19 +1,14 @@
 package com.freelansoft.mywork.ui.main
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.pm.PackageManager
 import android.location.Location
-import androidx.core.app.ActivityCompat
 import androidx.lifecycle.LiveData
 import com.freelansoft.mywork.dto.LocationDetails
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
-
-
 
 class LocationLiveData(context: Context) : LiveData<LocationDetails>() {
 
@@ -28,6 +23,7 @@ class LocationLiveData(context: Context) : LiveData<LocationDetails>() {
     @SuppressLint("MissingPermission")
     override fun onActive() {
         super.onActive()
+
         fusedLocationClient.lastLocation.addOnSuccessListener {
             location: Location -> location.also {
             setLocationData(it)
@@ -38,6 +34,7 @@ class LocationLiveData(context: Context) : LiveData<LocationDetails>() {
 
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
+
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
     }
 
@@ -61,6 +58,7 @@ class LocationLiveData(context: Context) : LiveData<LocationDetails>() {
             value = LocationDetails(location.longitude.toString(), location.latitude.toString())
         }
     }
+
 
     companion object {
         val ONE_MINUTE : Long = 60000

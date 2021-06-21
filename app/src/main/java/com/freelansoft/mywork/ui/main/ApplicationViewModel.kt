@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.freelansoft.mywork.service.PlantService
 import kotlinx.coroutines.launch
 
-class LocationViewModel(application: Application) : AndroidViewModel(application) {
+class ApplicationViewModel(application: Application) : AndroidViewModel(application) {
     private var _plantService: PlantService = PlantService(application)
     private val locationLiveData = LocationLiveData(application)
     internal fun getLocationLiveData() = locationLiveData

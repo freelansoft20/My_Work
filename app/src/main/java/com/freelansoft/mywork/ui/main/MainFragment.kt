@@ -1,26 +1,25 @@
 package com.freelansoft.mywork.ui.main
 
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlertDialog
+import android.app.DatePickerDialog
+import android.app.Dialog
+import android.content.ContentValues
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
-import android.net.Uri
-import android.os.Build
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
-import android.os.Environment
 import android.provider.MediaStore
-import androidx.fragment.app.Fragment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.Toast
-import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
+import android.widget.*
+import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -33,28 +32,25 @@ import com.freelansoft.mywork.dto.Specimen
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.android.synthetic.main.main_fragment.*
-import java.io.File
+import java.lang.IllegalStateException
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
-class MainFragment : DiaryFragment() {
+class MainFragment : DiaryFragment(), DateSelected, NewPlantCreated  {
 
     private val CAMERA_REQUEST_CODE: Int = 1998
     private val IMAGE_GALLERY_REQUEST_CODE: Int = 2001
     private val LOCATION_PERMISSION_REQUEST_CODE = 2000
     private val AUTH_REQUEST_CODE = 2002
 
-//    private lateinit var applicationViewModel: ApplicationViewModel
+    private lateinit var applicationViewModel: ApplicationViewModel
     private var _plantId = 0
     private var user : FirebaseUser? = null
     private var specimen = Specimen()
     private var _events = ArrayList<Event>()
     var selectedPlant: Plant = Plant("", "", "")
 
-    companion object {
-        fun newInstance() = MainFragment()
-    }
 
     private lateinit var viewModel: MainViewModel
 
@@ -66,7 +62,7 @@ class MainFragment : DiaryFragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
-        viewModel.plants.observe(viewLifecycleOwner, Observer {
+        applicationViewModel.plantService.getLocalPlantDAO().getAllPlants().observe(viewLifecycleOwner, Observer {
             plants -> actPlantName.setAdapter(ArrayAdapter(requireContext(), R.layout.support_simple_spinner_dropdown_item, plants))
         })
 
@@ -94,6 +90,10 @@ class MainFragment : DiaryFragment() {
 
         btnSave.setOnClickListener {
             saveSpecimen()
+        }
+
+        btnDatePlanted.setOnClickListener {
+            showDatePicker()
         }
 
         spnSpecimens.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -155,6 +155,11 @@ class MainFragment : DiaryFragment() {
             // tell the recycler view to update.
             rcyEventsForSpecimens.adapter!!.notifyDataSetChanged()
         })
+    }
+
+    private fun showDatePicker() {
+        val datePickerFragment = DatePickerFragment(this)
+        datePickerFragment.show(requireFragmentManager(), "datePicker")
     }
 
     private fun logon() {
@@ -223,7 +228,8 @@ class MainFragment : DiaryFragment() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.P)
+//    @RequiresApi(Build.VERSION_CODES.P)
+    @SuppressLint("NewApi")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK) {
@@ -249,5 +255,79 @@ class MainFragment : DiaryFragment() {
         }
     }
 
+    class DatePickerFragment(val dateSelected: MainFragment) : DialogFragment(), DatePickerDialog.OnDateSetListener {
+        override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+            val calendar = Calendar.getInstance()
+            val year = calendar.get(Calendar.YEAR)
+            val month  = calendar.get(Calendar.MONTH)
+            val dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH)
+            return DatePickerDialog(requireContext(), this, year, month, dayOfMonth)
+        }
 
+        override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {
+            dateSelected.receiveDate(year, month, dayOfMonth)
+            Log.d(ContentValues.TAG, "Got the date")
+
+        }
+    }
+
+
+    companion object {
+        fun newInstance() = MainFragment()
+    }
+
+    /**
+     * This is the function that will be invoked in our fragment when a user picks a date.
+     */
+    override fun receiveDate(year: Int, month: Int, dayOfMonth: Int) {
+        val calendar = GregorianCalendar()
+        calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+        calendar.set(Calendar.MONTH, month)
+        calendar.set(Calendar.YEAR, year)
+
+        val viewFormatter = SimpleDateFormat("dd-MMM-YYYY")
+        var viewFormattedDate = viewFormatter.format(calendar.getTime())
+        btnDatePlanted.setText(viewFormattedDate)
+    }
+
+//    class NewPlantDialogFragment(val enteredPlant:String, val newPlantCreated:NewPlantCreated) : DialogFragment() {
+//        override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+//            return activity?.let {
+//                val builder = AlertDialog.Builder(it)
+//                val inflater = requireActivity().layoutInflater
+//                var newPlantView = inflater.inflate(R.layout.newplantdialog, null)
+//                val txtCommon = newPlantView.findViewById<EditText>(R.id.edtCommon)
+//                val txtGenus = newPlantView.findViewById<EditText>(R.id.edtGenus)
+//                val txtSpecies = newPlantView.findViewById<EditText>(R.id.edtSpecies)
+//                txtCommon.setText(enteredPlant)
+//                builder.setView(newPlantView)
+//                        .setPositiveButton(getString(R.string.save), DialogInterface.OnClickListener{ dialog, which ->
+//                            val common = txtCommon.text.toString()
+//                            val genus = txtGenus.text.toString()
+//                            val species = txtSpecies.text.toString()
+//                            val newPlant = Plant(genus, species, common)
+//                            newPlantCreated.receivePlant(newPlant)
+//                            getDialog()?.cancel()
+//                        })
+//                        .setNegativeButton(getString(R.string.cancel), DialogInterface.OnClickListener { dialog, which ->
+//                            getDialog()?.cancel()
+//                        })
+//                builder.create()
+//            } ?: throw IllegalStateException("Activity cannot be null")
+//        }
+//    }
+
+    override fun receivePlant(plant: Plant) {
+         applicationViewModel.plantService.save(plant)
+    }
+
+
+}
+
+interface DateSelected {
+    fun receiveDate(year: Int, month: Int, dayOfMonth: Int)
+}
+
+interface NewPlantCreated {
+    fun receivePlant(plant: Plant)
 }

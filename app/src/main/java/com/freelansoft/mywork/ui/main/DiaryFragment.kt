@@ -1,5 +1,6 @@
 package com.freelansoft.mywork.ui.main
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.ContentValues
 import android.content.DialogInterface
@@ -155,7 +156,7 @@ open class DiaryFragment: Fragment() {
          * item at the given position in the data set.
          * @param position The position of the item within the adapter's data set.
          */
-        @RequiresApi(Build.VERSION_CODES.P)
+//        @RequiresApi(Build.VERSION_CODES.P)
         override fun onBindViewHolder(holder: EventViewHolder, position: Int) {
             val event = events.get(position)
             holder.updateEvent(event)
@@ -173,7 +174,8 @@ open class DiaryFragment: Fragment() {
          * This function will get called once for each item in the collection that we want to show in our recylcer view
          * Paint a single row of the recycler view with this event data class.
          */
-        @RequiresApi(Build.VERSION_CODES.P)
+//        @RequiresApi(Build.VERSION_CODES.P)
+        @SuppressLint("NewApi")
         fun updateEvent (event : Event) {
 //            btnDeleteEvent.setOnClickListener {
 //                deleteEvent(event)

@@ -17,7 +17,6 @@ import com.google.firebase.storage.FirebaseStorage
 
 class MainViewModel : ViewModel() {
     private var _plants: MutableLiveData<ArrayList<Plant>> = MutableLiveData<ArrayList<Plant>>()
-    private var plantService: PlantService = PlantService()
     private lateinit var firestore : FirebaseFirestore
     private var _specimens: MutableLiveData<ArrayList<Specimen>> = MutableLiveData<ArrayList<Specimen>>()
     private var storageReferenence = FirebaseStorage.getInstance().getReference()
@@ -27,7 +26,6 @@ class MainViewModel : ViewModel() {
 
 
     init {
-        fetchPlants("e")
         firestore = FirebaseFirestore.getInstance()
         firestore.firestoreSettings = FirebaseFirestoreSettings.Builder().build()
         listenToSpecimens()
@@ -59,10 +57,6 @@ class MainViewModel : ViewModel() {
         }
     }
 
-
-    fun fetchPlants(plantName: String) {
-        _plants = plantService.fetchPlants(plantName)
-    }
 
     fun save(specimen: Specimen, photos: java.util.ArrayList<Photo>, user: FirebaseUser) {
         val document =
