@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="edtCommon" type="id">edtCommon</item>
+    <item name="edtGenus" type="id">edtGenus</item>
+    <item name="edtSpecies" type="id">edtSpecies</item>
+</resources>

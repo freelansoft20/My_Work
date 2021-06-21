@@ -1,7 +1,10 @@
 package com.freelansoft.mywork
 
+import android.content.ContentValues
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
+import com.freelansoft.mywork.dto.Specimen
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -9,6 +12,8 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreSettings
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -35,9 +40,32 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-        // Add a marker in Sydney and move the camera
-        val sydney = LatLng(-34.0, 151.0)
-        mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+        var firestore = FirebaseFirestore.getInstance()
+        firestore.firestoreSettings = FirebaseFirestoreSettings.Builder().build()
+
+        firestore.collection("specimens").addSnapshotListener {
+            snapshot, e ->
+            // if there is an exception we want to skip.
+            if (e != null) {
+                Log.w(ContentValues.TAG, "Listen Failed", e)
+                return@addSnapshotListener
+            }
+            // if we are here, we did not encounter an exception
+            if (snapshot != null) {
+                // now, we have a populated shapshot
+                val documents = snapshot.documents
+                documents.forEach {
+
+                    val specimen = it.toObject(Specimen::class.java)
+                    if (specimen != null && !specimen.latitude.isEmpty() && !specimen.longitude.isEmpty()) {
+                        specimen.specimenId = it.id
+                        val marker = LatLng(specimen.latitude.toDouble(), specimen.longitude.toDouble())
+                        mMap.addMarker(MarkerOptions().position(marker).title(specimen.toString()))
+
+                    }
+                }
+            }
+        }
+
     }
 }
