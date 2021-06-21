@@ -5,6 +5,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.freelansoft.mywork.dto.Event
 import com.freelansoft.mywork.dto.Photo
 import com.freelansoft.mywork.dto.Plant
 import com.freelansoft.mywork.dto.Specimen
@@ -21,7 +22,7 @@ class MainViewModel : ViewModel() {
     private var _specimens: MutableLiveData<ArrayList<Specimen>> = MutableLiveData<ArrayList<Specimen>>()
     private var storageReferenence = FirebaseStorage.getInstance().getReference()
     private var _specimen = Specimen()
-//    private var _events = MutableLiveData<List<Event>>()
+    private var _events = MutableLiveData<List<Event>>()
 
 
 
@@ -64,18 +65,48 @@ class MainViewModel : ViewModel() {
     }
 
     fun save(specimen: Specimen, photos: java.util.ArrayList<Photo>, user: FirebaseUser) {
-        val document = firestore.collection("specimens").document()
+        val document =
+                if (specimen.specimenId != null && !specimen.specimenId.isEmpty()) {
+                    // updating existing
+                    firestore.collection("specimens").document(specimen.specimenId)
+                } else {
+                    // create new
+                    firestore.collection("specimens").document()
+                }
         specimen.specimenId = document.id
         val set = document.set(specimen)
-                set.addOnSuccessListener {
-                    Log.d("Firebase", "Document saved")
-                    if (photos != null && photos.size > 0) {
-                        savePhotos(specimen, photos,user )
-                    }
-                }
-                set.addOnFailureListener {
-                    Log.d("Firebase", "Save failed")
-                }
+        set.addOnSuccessListener {
+            Log.d("Firebase", "document saved")
+            if (photos != null && photos.size > 0) {
+                savePhotos(specimen, photos, user)
+            }
+        }
+        set.addOnFailureListener {
+            Log.d("Firebase", "Save Failed")
+        }
+    }
+
+    internal fun save(event: Event) {
+        val collection = firestore.collection("specimens").document(specimen.specimenId).collection("events")
+        val task = collection.add(event)
+        task.addOnSuccessListener {
+            event.id = it.id
+        }
+        task.addOnFailureListener {
+            var message = it.message
+            var i = 1 + 1
+        }
+
+    }
+
+    internal fun fetchEvents() {
+        var eventsCollection = firestore.collection("specimens")
+                .document(specimen.specimenId)
+                .collection("events")
+        eventsCollection.addSnapshotListener { querySnapshot, firebaseFirestoreException ->
+            var innerEvents = querySnapshot?.toObjects(Event::class.java)
+            _events.postValue(innerEvents!!)
+        }
     }
 
     private fun savePhotos(specimen: Specimen, photos: java.util.ArrayList<Photo>, user: FirebaseUser) {
@@ -127,4 +158,12 @@ class MainViewModel : ViewModel() {
     internal var specimens: MutableLiveData<ArrayList<Specimen>>
         get() { return _specimens}
         set(value) {_specimens = value}
+
+    internal var specimen: Specimen
+        get() {return _specimen}
+        set(value) {_specimen = value}
+
+    internal var events : MutableLiveData<List<Event>>
+        get() { return _events}
+        set(value) {_events = value}
 }
