@@ -6,4 +6,10 @@
     <string name="plantName">plantName</string>
     <string name="description">description</string>
     <string name="datePlanted">datePlanted</string>
+    <string name="EventType">EventType</string>
+    <string name="quantity">quantity</string>
+    <string name="units">units</string>
+    <string name="eventDate">eventDate</string>
+    <string name="yes">yes</string>
+    <string name="no">no</string>
 </resources>
