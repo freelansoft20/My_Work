@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
@@ -23,6 +24,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.RecyclerView
 import com.freelansoft.mywork.R
 import com.freelansoft.mywork.dto.Event
@@ -38,6 +40,15 @@ open class DiaryFragment: Fragment() {
     protected val SAVE_IMAGE_REQUEST_CODE: Int = 1999
     protected var photoURI : Uri? = null
     protected var photos : ArrayList<Photo> = ArrayList<Photo>()
+    private lateinit var viewModel: MainViewModel
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        activity.let {
+            viewModel = ViewModelProviders.of(it!!).get(MainViewModel::class.java)
+        }
+    }
+
     protected fun prepTakePhoto() {
 
         if (ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
@@ -168,7 +179,7 @@ open class DiaryFragment: Fragment() {
     inner class EventViewHolder(itemView : View) : RecyclerView.ViewHolder(itemView) {
         private var imgEventThumbnail : ImageView = itemView.findViewById(R.id.imgEventThumbnail)
         private var lblEventInfo: TextView = itemView.findViewById(R.id.lblEventInfo)
-//        private var btnDeleteEvent: ImageButton = itemView.findViewById(R.id.btnDeleteEvent)
+        private var btnDeleteEvent: ImageButton = itemView.findViewById(R.id.btnDeleteEvent)
 
         /**
          * This function will get called once for each item in the collection that we want to show in our recylcer view
@@ -177,9 +188,9 @@ open class DiaryFragment: Fragment() {
 //        @RequiresApi(Build.VERSION_CODES.P)
         @SuppressLint("NewApi")
         fun updateEvent (event : Event) {
-//            btnDeleteEvent.setOnClickListener {
-//                deleteEvent(event)
-//            }
+            btnDeleteEvent.setOnClickListener {
+                deleteEvent(event)
+            }
             lblEventInfo.text = event.toString()
             if (event.localPhotoUri != null && event.localPhotoUri != "null") {
                 try {
@@ -196,20 +207,20 @@ open class DiaryFragment: Fragment() {
         }
     }
 
-//    private fun deleteEvent(event: Event) {
-//        var builder = AlertDialog.Builder(activity)
-//        builder.setTitle(getString(R.string.confirm_delete))
-//        builder.setMessage(getString(R.string.delete_confirmation_message))
-//        builder.setPositiveButton(getString(R.string.yes), DialogInterface.OnClickListener { dialog, id ->
-//            viewModel.delete(event)
-//            dialog.cancel()
-//        })
-//        builder.setNegativeButton(getString(R.string.no), DialogInterface.OnClickListener { dialog, id ->
-//            dialog.cancel()
-//        })
-//        var alert = builder.create()
-//        alert.show()
-//
-//    }
+    private fun deleteEvent(event: Event) {
+        var builder = AlertDialog.Builder(activity)
+        builder.setTitle(getString(R.string.confirm_delete))
+        builder.setMessage(getString(R.string.delete_confirmation_message))
+        builder.setPositiveButton(getString(R.string.yes), DialogInterface.OnClickListener { dialog, id ->
+            viewModel.delete(event)
+            dialog.cancel()
+        })
+        builder.setNegativeButton(getString(R.string.no), DialogInterface.OnClickListener { dialog, id ->
+            dialog.cancel()
+        })
+        var alert = builder.create()
+        alert.show()
+
+    }
 
 }

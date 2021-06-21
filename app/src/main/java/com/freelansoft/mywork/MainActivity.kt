@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.core.view.GestureDetectorCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
+import com.freelansoft.mywork.ui.main.DiaryMapFragment
 import com.freelansoft.mywork.ui.main.EventFragment
 import com.freelansoft.mywork.ui.main.MainFragment
 import com.freelansoft.mywork.ui.main.MainViewModel
@@ -122,5 +123,11 @@ class MainActivity : AppCompatActivity() {
                     .commitNow()
             activeFragment = mainFragment
         }
+    }
+
+    internal fun onOpenMap() {
+        supportFragmentManager.beginTransaction()
+                .replace(R.id.container, DiaryMapFragment())
+                .commitNow()
     }
 }

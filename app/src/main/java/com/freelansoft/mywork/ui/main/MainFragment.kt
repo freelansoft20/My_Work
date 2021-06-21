@@ -1,5 +1,6 @@
 package com.freelansoft.mywork.ui.main
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
@@ -19,11 +20,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.firebase.ui.auth.AuthUI
+import com.freelansoft.mywork.MainActivity
+import com.freelansoft.mywork.MapsActivity
 import com.freelansoft.mywork.R
 import com.freelansoft.mywork.dto.Event
 import com.freelansoft.mywork.dto.Photo
@@ -35,6 +40,8 @@ import kotlinx.android.synthetic.main.main_fragment.*
 import java.lang.IllegalStateException
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.List.of
+import java.util.Map.of
 import kotlin.collections.ArrayList
 
 class MainFragment : DiaryFragment(), DateSelected, NewPlantCreated  {
@@ -43,15 +50,12 @@ class MainFragment : DiaryFragment(), DateSelected, NewPlantCreated  {
     private val IMAGE_GALLERY_REQUEST_CODE: Int = 2001
     private val LOCATION_PERMISSION_REQUEST_CODE = 2000
     private val AUTH_REQUEST_CODE = 2002
-
     private lateinit var applicationViewModel: ApplicationViewModel
     private var _plantId = 0
     private var user : FirebaseUser? = null
     private var specimen = Specimen()
     private var _events = ArrayList<Event>()
     var selectedPlant: Plant = Plant("", "", "")
-
-
     private lateinit var viewModel: MainViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -61,7 +65,10 @@ class MainFragment : DiaryFragment(), DateSelected, NewPlantCreated  {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+        applicationViewModel = ViewModelProvider(this).get(applicationViewModel::class.java)
+        activity.let{
+            viewModel = ViewModelProvider(it!!).get(MainViewModel::class.java)
+        }
         applicationViewModel.plantService.getLocalPlantDAO().getAllPlants().observe(viewLifecycleOwner, Observer {
             plants -> actPlantName.setAdapter(ArrayAdapter(requireContext(), R.layout.support_simple_spinner_dropdown_item, plants))
         })
@@ -79,6 +86,34 @@ class MainFragment : DiaryFragment(), DateSelected, NewPlantCreated  {
             _plantId = selectedPlant.plantId
         }
 
+        actPlantName.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                selectedPlant = Plant("", "", "")
+            }
+
+            /**
+             * An existing item was clicked from the predefined autocomplete list.
+             */
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                selectedPlant = parent!!.getItemAtPosition(position) as Plant
+                _plantId = selectedPlant.plantId
+            }
+        }
+        actPlantName.setOnFocusChangeListener { view, hasFocus ->
+            var enteredPlant = actPlantName.text.toString()
+            if (selectedPlant != null && enteredPlant.isNotEmpty() && !enteredPlant.equals(selectedPlant.toString())) {
+                // we have a new plant.
+                // we want to ask the user to create a new entry.
+                val newPlantDialogFragment = NewPlantDialogFragment(enteredPlant, this)
+                newPlantDialogFragment.show(requireFragmentManager(), "New Plant")
+            }
+
+        }
+
+        btnMap.setOnClickListener {
+            (activity as MainActivity).onOpenMap()
+        }
+
         btnTakePhoto.setOnClickListener {
             prepTakePhoto()
         }
@@ -87,6 +122,8 @@ class MainFragment : DiaryFragment(), DateSelected, NewPlantCreated  {
             logon()
 //            prepOpenImageGallery()
         }
+
+        prepRequestLocationUpdates()
 
         btnSave.setOnClickListener {
             saveSpecimen()
@@ -202,7 +239,23 @@ class MainFragment : DiaryFragment(), DateSelected, NewPlantCreated  {
         viewModel.specimen = specimen
     }
 
-        private fun prepOpenImageGallery() {
+    private fun prepRequestLocationUpdates() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            requestLocationUpdates()
+        } else {
+            val permissionRequest = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+            requestPermissions(permissionRequest, LOCATION_PERMISSION_REQUEST_CODE)
+        }
+    }
+
+    private fun requestLocationUpdates() {
+        applicationViewModel.getLocationLiveData().observe(viewLifecycleOwner, Observer {
+            lblLatitudeValue.text = it.latitude
+            lblLongitudeValue.text = it.longitude
+        })
+    }
+
+    private fun prepOpenImageGallery() {
         Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI).apply {
             type = "image/*"
             startActivityForResult(this, IMAGE_GALLERY_REQUEST_CODE)
@@ -290,32 +343,32 @@ class MainFragment : DiaryFragment(), DateSelected, NewPlantCreated  {
         btnDatePlanted.setText(viewFormattedDate)
     }
 
-//    class NewPlantDialogFragment(val enteredPlant:String, val newPlantCreated:NewPlantCreated) : DialogFragment() {
-//        override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-//            return activity?.let {
-//                val builder = AlertDialog.Builder(it)
-//                val inflater = requireActivity().layoutInflater
-//                var newPlantView = inflater.inflate(R.layout.newplantdialog, null)
-//                val txtCommon = newPlantView.findViewById<EditText>(R.id.edtCommon)
-//                val txtGenus = newPlantView.findViewById<EditText>(R.id.edtGenus)
-//                val txtSpecies = newPlantView.findViewById<EditText>(R.id.edtSpecies)
-//                txtCommon.setText(enteredPlant)
-//                builder.setView(newPlantView)
-//                        .setPositiveButton(getString(R.string.save), DialogInterface.OnClickListener{ dialog, which ->
-//                            val common = txtCommon.text.toString()
-//                            val genus = txtGenus.text.toString()
-//                            val species = txtSpecies.text.toString()
-//                            val newPlant = Plant(genus, species, common)
-//                            newPlantCreated.receivePlant(newPlant)
-//                            getDialog()?.cancel()
-//                        })
-//                        .setNegativeButton(getString(R.string.cancel), DialogInterface.OnClickListener { dialog, which ->
-//                            getDialog()?.cancel()
-//                        })
-//                builder.create()
-//            } ?: throw IllegalStateException("Activity cannot be null")
-//        }
-//    }
+    class NewPlantDialogFragment(val enteredPlant:String, val newPlantCreated:NewPlantCreated) : DialogFragment() {
+        override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+            return activity?.let {
+                val builder = AlertDialog.Builder(it)
+                val inflater = requireActivity().layoutInflater
+                var newPlantView = inflater.inflate(R.layout.newplantdialog, null)
+                val txtCommon = newPlantView.findViewById<EditText>(R.id.edtCommon)
+                val txtGenus = newPlantView.findViewById<EditText>(R.id.edtGenus)
+                val txtSpecies = newPlantView.findViewById<EditText>(R.id.edtSpecies)
+                txtCommon.setText(enteredPlant)
+                builder.setView(newPlantView)
+                        .setPositiveButton(getString(R.string.save), DialogInterface.OnClickListener{ dialog, which ->
+                            val common = txtCommon.text.toString()
+                            val genus = txtGenus.text.toString()
+                            val species = txtSpecies.text.toString()
+                            val newPlant = Plant(genus, species, common)
+                            newPlantCreated.receivePlant(newPlant)
+                            getDialog()?.cancel()
+                        })
+                        .setNegativeButton(getString(R.string.cancel), DialogInterface.OnClickListener { dialog, which ->
+                            getDialog()?.cancel()
+                        })
+                builder.create()
+            } ?: throw IllegalStateException("Activity cannot be null")
+        }
+    }
 
     override fun receivePlant(plant: Plant) {
          applicationViewModel.plantService.save(plant)

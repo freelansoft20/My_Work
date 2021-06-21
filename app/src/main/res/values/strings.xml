@@ -15,4 +15,11 @@
     <string name="save">save</string>
     <string name="cancel">cancel</string>
     <string name="title_activity_maps">Map</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="confirm_delete">confirm_delete</string>
+    <string name="delete_confirmation_message">delete_confirmation_message</string>
+    <string name="common_name">common_name</string>
+    <string name="genus">genus</string>
+    <string name="species">species</string>
 </resources>
