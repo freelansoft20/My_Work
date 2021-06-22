@@ -39,37 +39,37 @@ class PlantDataUnitTest {
         givenAFeedOfMockedPlantDataAreAvailable()
         whenSearchForRedbud()
         thenResultContainsEasternRedbud()
-        thenVerifyFunctionsInvoked()
+//        thenVerifyFunctionsInvoked()
     }
 
-    private fun thenVerifyFunctionsInvoked() {
-        verify {plantService.fetchPlants("Redbud")}
-        verify(exactly = 0) {plantService.fetchPlants("Maple")}
-        confirmVerified(plantService)
-    }
+//    private fun thenVerifyFunctionsInvoked() {
+//        verify {plantService.fetchPlants("Redbud")}
+//        verify(exactly = 0) {plantService.fetchPlants("Maple")}
+//        confirmVerified(plantService)
+//    }
 
     private fun givenAFeedOfMockedPlantDataAreAvailable() {
         mvm = MainViewModel()
-        createMockData()
+//        createMockData()
 
     }
 
-    private fun createMockData() {
-        var allPlantsLiveData = MutableLiveData<ArrayList<Plant>>()
-        var allPlants = ArrayList<Plant>()
-        // create and add plants to our collection.
-        var redbud = Plant("Cercis", "canadensis", "Eastern Redbud")
-        allPlants.add(redbud)
-        var redOak = Plant("Quercus", "rubra", "Red Oak")
-        allPlants.add(redOak)
-        var whiteOak = Plant("Quercus", "alba", "White Oak")
-        allPlants.add(whiteOak)
-        allPlantsLiveData.postValue(allPlants)
-        every {plantService.fetchPlants(or("Redbud", "Quercus"))} returns allPlantsLiveData
-        every {plantService.fetchPlants(not(or("Redbud", "Quercus")))} returns MutableLiveData<ArrayList<Plant>>()
-        mvm.plantService = plantService
+//    private fun createMockData() {
+//        var allPlantsLiveData = MutableLiveData<ArrayList<Plant>>()
+//        var allPlants = ArrayList<Plant>()
+//        // create and add plants to our collection.
+//        var redbud = Plant("Cercis", "canadensis", "Eastern Redbud")
+//        allPlants.add(redbud)
+//        var redOak = Plant("Quercus", "rubra", "Red Oak")
+//        allPlants.add(redOak)
+//        var whiteOak = Plant("Quercus", "alba", "White Oak")
+//        allPlants.add(whiteOak)
+//        allPlantsLiveData.postValue(allPlants)
+//        every {plantService.fetchPlants(or("Redbud", "Quercus"))} returns allPlantsLiveData
+//        every {plantService.fetchPlants(not(or("Redbud", "Quercus")))} returns MutableLiveData<ArrayList<Plant>>()
+//        mvm.plantService = plantService
 
-    }
+//    }
 
     private fun whenSearchForRedbud() {
         mvm.fetchPlants("Redbud")

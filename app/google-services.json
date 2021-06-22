@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "807464872811-n695nudpgtla0n3friupcseonvitm4fe.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.freelansoft.mywork",
+            "certificate_hash": "de760c5c263b570cbb560e2668da553d88e75b64"
+          }
+        },
+        {
           "client_id": "807464872811-reis7rps312qfgn6b3ngft7s7thbs0eu.apps.googleusercontent.com",
           "client_type": 3
         }

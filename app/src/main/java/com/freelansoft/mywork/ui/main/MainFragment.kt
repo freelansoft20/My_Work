@@ -12,6 +12,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
+import android.os.Build
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import android.provider.MediaStore
@@ -20,6 +21,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
@@ -201,9 +203,8 @@ class MainFragment : DiaryFragment(), DateSelected, NewPlantCreated  {
 
     private fun logon() {
         var providers = arrayListOf(
-                AuthUI.IdpConfig.EmailBuilder().build()
-//                ,
-//                AuthUI.IdpConfig.GoogleBuilder().build()
+                AuthUI.IdpConfig.EmailBuilder().build(),
+                AuthUI.IdpConfig.GoogleBuilder().build()
         )
         startActivityForResult(
                 AuthUI.getInstance().createSignInIntentBuilder().setAvailableProviders(providers).build(), AUTH_REQUEST_CODE
@@ -281,15 +282,15 @@ class MainFragment : DiaryFragment(), DateSelected, NewPlantCreated  {
         }
     }
 
-//    @RequiresApi(Build.VERSION_CODES.P)
-    @SuppressLint("NewApi")
+    @RequiresApi(Build.VERSION_CODES.P)
+//    @SuppressLint("NewApi")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == CAMERA_REQUEST_CODE)  {
                 if (requestCode == CAMERA_REQUEST_CODE) {
                     // now we can get the thumbnail
-                    val imageBitmap = data!!.extras!!.get("data") as Bitmap
+//                    val imageBitmap = data!!.extras!!.get("data") as Bitmap
                 } else if (requestCode == SAVE_IMAGE_REQUEST_CODE) {
                     Toast.makeText(context, "Image Saved", Toast.LENGTH_LONG).show()
                     var photo = Photo(localUri = photoURI.toString())

@@ -158,6 +158,10 @@ class MainViewModel : ViewModel() {
                 .set(photo)
     }
 
+    fun fetchPlants(s: String) {
+
+    }
+
     internal var plants: MutableLiveData<ArrayList<Plant>>
         get() {return _plants}
         set(value) {_plants = value}
